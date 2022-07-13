@@ -1,0 +1,25 @@
+sudo: required
+services:
+  - docker
+# Build test verson of React project
+before_install:
+  - docker build -t imnamnv/react-test -f ./client/Dockerfile.dev ./client
+
+# Run test
+script:
+  - docker run -e CI=true imnamnv/react-test npm test
+
+# Build prod verson of all projects
+after_success:
+  - docker build -t imnamnv/multi-client ./client
+  - docker build -t imnamnv/multi-nginx ./nginx
+  - docker build -t imnamnv/multi-server ./server
+  - docker build -t imnamnv/multi-worker ./worker
+  # login to the docer CLI
+  # get password and paster into input in next command
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # take those images and push them to Docker Hub
+  - docker push imnamnv/multi-client
+  - docker push imnamnv/multi-nginx
+  - docker push imnamnv/multi-server
+  - docker push imnamnv/multi-worker
